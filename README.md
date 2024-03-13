@@ -136,3 +136,33 @@ Cấu hình SPI ...
 </p>
 </details>
 
+ <details><summary>Bài 3: Ngắt & Timer </summary>
+<p>
+
+# Ngắt
+ Sự kiện diễn ra trong hoặc ngoài vđk, yêu cầu MCU dừng chương trình chính và thực thi chương trình ngắt 
+
+ vd: đang chơi game má gọi đi rửa chén =)))
+
+Mỗi ngắt có 1 trình phục vụ ngắt, sẽ yêu cầu MCU thực thi lệnh tại trình phục vụ ngắt khi có ngắt xảy ra.
+
+Các ngắt có các địa chỉ cố định trong bộ nhớ để giữ các trình phục vụ.(vector ngắt.) 
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/f37cec44-a5c0-4b71-b0e9-f29193ac21ae)
+
+## Ngắt ngoài - tác động từ ngoài MCU  
+
+Xảy ra khi có sự thay đổi điện áp trên các chân GPIO được cấu hình là ngõ vào ngắt 
+
+* LOW - kích hoạt ngắt liên tục khi chân mức Thấp (0)
+* High -  kích hoạt ngắt liên tục khi chân mức Cao (1)
+* Rising - kích hoạt ngắt khi chuyển từ thấp lên cao 
+* Falling - kích hoạt ngắt khi chyển từ cao xuống thấp 
+
+## Ngắt timer 
+
+
+
+</p>
+</details>
+
