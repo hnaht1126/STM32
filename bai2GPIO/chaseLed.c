@@ -2,11 +2,11 @@
 #include<stm32f10x.h>
 #include<stm32f10x_gpio.h>
 #include<stm32f10x_rcc.h>
-#include <stm32f10x_tim.h> // Thêm thư viện TIM (Timer)
+// #include <stm32f10x_tim.h> // Thêm thư viện TIM (Timer)
 
-// Hàm delay từ thư viện HAL
+/* // Hàm delay từ thư viện HAL
 void HAL_Delay(uint32_t Delay);
-
+ */
 void RCC_Config(){
     // turn on clock
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
@@ -24,6 +24,12 @@ GPIO_InitTypeDef GPIO_InitStructure;
 
 }
 
+void delay_ms(uint8_t timedelay)
+	{
+	TIM_SetCounter(TIM2,0);
+	  while(TIM_GetCounter(TIM2)<timedelay*10){}
+	}
+
 
 void offLed() {
     GPIO_Write(GPIOC, 0x0000); // Tắt all LED trên port C (ghi giá trị 0x0000 vào port C)
@@ -38,7 +44,8 @@ void chaseLed(uint8_t loop){
 		{
 			Ledval = Ledval<<1;
 			GPIO_Write(GPIOC, Ledval);
-			HAL_Delay(1000); //1000ms 
+			// HAL_Delay(1000); //1000ms 
+			delay_ms(1000); 
 		}
 	}
 }
