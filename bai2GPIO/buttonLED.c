@@ -31,11 +31,11 @@ GPIO_InitTypeDef GPIO_InitStructure;
 
 }
 
-void delay_ms(uint8_t timedelay)
-	{
-	TIM_SetCounter(TIM2,0);
-	  while(TIM_GetCounter(TIM2)<timedelay*10){}
-	}
+// void delay_ms(uint8_t timedelay)
+// 	{
+// 	TIM_SetCounter(TIM2,0);
+// 	  while(TIM_GetCounter(TIM2)<timedelay*10){}
+// 	}
 
 int main (){
     RCC_Config();
@@ -54,7 +54,7 @@ int main (){
             }
         }
 
-    delay_ms(100); //giảm thiểu việc đọc trạng thái không mong muốn
+    // delay_ms(100); //giảm thiểu việc đọc trạng thái không mong muốn
 
     }
     return 0;
