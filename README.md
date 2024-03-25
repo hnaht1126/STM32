@@ -138,7 +138,7 @@ Cấu hình SPI ...
 
 # Bài 3: Ngắt & Timer 
 
-## Ngắt
+## 1. Ngắt
  Sự kiện diễn ra trong hoặc ngoài vđk, yêu cầu MCU dừng chương trình chính và thực thi chương trình ngắt 
 
  vd: đang chơi game má gọi đi rửa chén =)))
@@ -238,7 +238,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 
 ```
 
-## Độ ưu tiên ngắt
+## 2. Độ ưu tiên ngắt
 
 Độ ưu tiên ngắt là khác nhau ở các ngắt. Nó xác định ngắt nào được quyền thực thi khi nhiều ngắt xảy ra đồng thời.
 
@@ -257,7 +257,7 @@ void HAL_MspInit(void) {
     // ...
 }
 ```
-##  Timer
+##  3. Timer
 
 timer thường được sử dụng để thực hiện các nhiệm vụ như đo thời gian, đếm xung, gửi ngắt theo chu kỳ, và các tác vụ liên quan đến thời gian.
 
