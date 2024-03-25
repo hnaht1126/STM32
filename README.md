@@ -339,32 +339,35 @@ Sử dụng 4 dây giao tiếp.
 
 ## Quá trình truyền nhận SPI
 
-**Khởi tạo:** Khởi tạo giao tiếp SPI trên các thiết bị tham gia. Bao gồm cấu hình các thông số như tốc độ truyền, chế độ truyền dữ liệu (full duplex, half duplex), và cài đặt các chân (pins) tương ứng.
+1. **Khởi tạo:** Khởi tạo giao tiếp SPI trên các thiết bị tham gia. Bao gồm cấu hình các thông số như tốc độ truyền, chế độ truyền dữ liệu (full duplex, half duplex), và cài đặt các chân (pins) tương ứng.
 
-**Chọn thiết bị:** Trong một hệ thống có nhiều thiết bị SPI, thiết bị gửi dữ liệu sẽ chọn thiết bị nhận dữ liệu bằng cách kích hoạt tín hiệu chọn thiết bị (chip select). Mỗi thiết bị SPI thường có một tín hiệu chip select riêng để đảm bảo chỉ có một thiết bị được kích hoạt trong mỗi thời điểm.
+2. **Chọn thiết bị:** Trong một hệ thống có nhiều thiết bị SPI, thiết bị gửi dữ liệu sẽ chọn thiết bị nhận dữ liệu bằng cách kích hoạt tín hiệu chọn thiết bị (chip select). Mỗi thiết bị SPI thường có một tín hiệu chip select riêng để đảm bảo chỉ có một thiết bị được kích hoạt trong mỗi thời điểm.
 
-**Truyền dữ liệu:** Dữ liệu được truyền đi từ thiết bị gửi tới thiết bị nhận thông qua các chân MOSI (Master Out Slave In) và MISO (Master In Slave Out). Cả hai thiết bị cùng trao đổi dữ liệu theo cùng một thời gian, do đó giao tiếp SPI là giao tiếp đồng bộ.
+3. **Truyền dữ liệu:** Dữ liệu được truyền đi từ thiết bị gửi tới thiết bị nhận thông qua các chân MOSI (Master Out Slave In) và MISO (Master In Slave Out). Cả hai thiết bị cùng trao đổi dữ liệu theo cùng một thời gian, do đó giao tiếp SPI là giao tiếp đồng bộ.
 
-**Xác nhận dữ liệu:** Sau khi dữ liệu được truyền, thiết bị nhận có thể xác nhận việc nhận dữ liệu bằng cách gửi một tín hiệu ACK (acknowledge) hoặc NACK (not acknowledge) tới thiết bị gửi.
+4. **Xác nhận dữ liệu:** Sau khi dữ liệu được truyền, thiết bị nhận có thể xác nhận việc nhận dữ liệu bằng cách gửi một tín hiệu ACK (acknowledge) hoặc NACK (not acknowledge) tới thiết bị gửi.
 
-**Giải phóng tín hiệu chip select:** Khi toàn bộ dữ liệu đã được truyền hoặc nhận, tín hiệu chip select sẽ được giải phóng, cho phép các thiết bị khác trong hệ thống được truy cập.
+5. **Giải phóng tín hiệu chip select:** Khi toàn bộ dữ liệu đã được truyền hoặc nhận, tín hiệu chip select sẽ được giải phóng, cho phép các thiết bị khác trong hệ thống được truy cập.
+
+Quá trình truyền nhận SPI là một quy trình đồng bộ và nhanh chóng, thích hợp cho các ứng dụng yêu cầu truyền dữ liệu nhanh và tin cậy giữa các thiết bị trong hệ thống điện tử.
 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/a1575233-bd46-4068-ba77-8621d5e72f28)
 
 
 * Bắt đầu quá trình, master sẽ kéo chân CS của slave muốn giao tiếp xuống 0 để báo hiệu muốn truyền nhận.
-* Clock sẽ được cấp bởi master, tùy vào chế độ được cài, với mỗi xungc clock,  1 bit sẽ được truyền từ master đến slave và slave cũng truyền 1 bit cho master.
+* Clock sẽ được cấp bởi master, tùy vào chế độ được cài, với mỗi xung clock,  1 bit sẽ được truyền từ master đến slave và slave cũng truyền 1 bit cho master.
 * Các thanh ghi cập nhật giá trị và dịch 1 bit.
 * Lặp lại quá trình trên đến khi truyền xong 8 bit trong thanh ghi.
-* Giao tiếp song công.
+
 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/b563076e-83ae-4bf7-b6c1-81dfe5c1e55f)
 
-## Các chế độ hoạt động
+## Các chế độ hoạt động của SPI
 
 SPI có 4 chế độ hoạt động phụ thuộc Clock Polarity – CPOL và  Phase - CPHA.
 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/22139d22-c28a-4731-bcf5-a60c30e5998e)
+
 
 ## 3. I2C
 I2C là chuẩn giao tiếp nối tiếp, chỉ sử dụng 2 dây SDA, SCL.
@@ -375,6 +378,21 @@ I2C là chuẩn giao tiếp nối tiếp, chỉ sử dụng 2 dây SDA, SCL.
 
 ## Quá trình truyền nhận I2C
 
+![image](https://github.com/hnaht1126/STM32/assets/152061415/ba566af9-890b-42fe-a619-595675c32b17)
+
+1. **Khởi tạo**: Quá trình truyền nhận bắt đầu bằng việc `khởi tạo giao tiếp I2C trên các thiết bị tham gia`. Điều này bao gồm việc `cấu hình các thông số như tốc độ truyền, địa chỉ của thiết bị, và cài đặt các chân (pins) tương ứng`.
+
+2. **Chọn thiết bị**: Trong một hệ thống có nhiều thiết bị I2C, `thiết bị gửi dữ liệu sẽ gửi một tín hiệu gọi là "Start condition" để bắt đầu quá trình truyền dữ liệu và chọn thiết bị nhận dữ liệu`.
+
+3. **Gửi địa chỉ thiết bị và hướng truyền**: Thiết bị gửi sẽ gửi `địa chỉ của thiết bị nhận dữ liệu cùng với bit chỉ định hướng truyền (ghi hoặc đọc)`.
+
+4. **Truyền hoặc nhận dữ liệu**: Sau khi thiết bị nhận dữ liệu xác nhận địa chỉ, quá trình truyền hoặc nhận dữ liệu bắt đầu. `Dữ liệu được truyền hoặc nhận thông qua các chân dữ liệu (SDA - Serial Data)`.
+
+5. **Xác nhận dữ liệu**: * Thiết bị nhận* có thể `xác nhận việc nhận dữ liệu bằng cách gửi một tín hiệu ACK hoặc NACK sau mỗi byte dữ liệu`.
+
+6. **Kết thúc quá trình truyền nhận**: Quá trình truyền nhận có thể kết thúc bằng cách `gửi một tín hiệu "Stop condition"` từ * thiết bị gửi*.
+
+Quá trình truyền nhận I2C là một quy trình đồng bộ và linh hoạt, thích hợp cho các ứng dụng yêu cầu truyền dữ liệu giữa các thành phần trong hệ thống điện tử mà không cần nhiều chân giao tiếp.
 
 
 
@@ -384,4 +402,69 @@ UART (Universal Asynchronous Receiver-Transmitter) là một giao thức truyề
 
 Gồm hai đường truyền dữ liệu độc lập là TX (truyền) và RX (nhận). 
 * Hoạt động song công.
-* Không cần chân Clock.
+* **Không cần chân Clock**.
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/19a4ef7e-c94f-4c2e-81d5-e8b8257fd030)
+
+ dữ liệu được truyền đi theo các chu kỳ đồng hồ được đồng bộ giữa các thiết bị liên quan
+
+Baudrate: tốc độ truyền.
+
+Baudrate = số bits truyền/1s. 
+
+Ví dụ: baudrate =9600:  9600bits / 1s
+                       9600bits / 1000ms
+                =>	   1 bit  = 0.10467 ms.
+
+=>> Timer (0->  0.10467 ms)
+
+## Quá trình truyền nhận UART
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/7cadd59a-b2a2-4b50-a01e-acb3e5cd269f)
+
+1. **Khởi tạo**: Cả thiết bị gửi và thiết bị nhận được `cấu hình về các thông số cơ bản như tốc độ baud, độ dài bit dữ liệu, kiểu stop bit, và kiểu điều kiển parity (nếu cần)`.
+
+2. **Truyền dữ liệu**: `Thiết bị gửi` (thường được gọi là trình điều khiển UART hoặc UART controller) `sẽ chuyển dữ liệu vào bộ đệm truyền` (TX buffer). Khi có dữ liệu trong bộ đệm truyền, `UART controller sẽ bắt đầu chuyển dữ liệu bit theo thứ tự từ bit thấp nhất đến bit cao nhất (hoặc ngược lại) qua chân truyền (TX) đến thiết bị nhận`.
+
+3. **Nhận dữ liệu**: `Thiết bị nhận` (thường là một UART controller khác hoặc một vi điều khiển) `sẽ theo dõi chân nhận (RX) để nhận dữ liệu từ thiết bị gửi. Dữ liệu nhận được sẽ được đưa vào bộ đệm nhận (RX buffer) để xử lý sau này`.
+
+4. **Kiểm tra lỗi và xử lý**: Trong quá trình truyền nhận, các lỗi có thể xảy ra như mất dữ liệu, lỗi định dạng, hoặc lỗi parity. Trong trường hợp này, hệ thống có thể `thực hiện các biện pháp sửa lỗi hoặc báo lỗi cho người dùng`.
+
+5. **Hoàn tất truyền nhận**: `Quá trình truyền nhận có thể kết thúc khi dữ liệu đã được truyền hoàn tất hoặc khi gặp điều kiện kết thúc được xác định trước` (ví dụ: gửi một ký tự kết thúc).
+
+Giao diện UART thường được sử dụng trong các ứng dụng như truyền dữ liệu giữa vi điều khiển và các cảm biến, mô-đun không dây, hoặc truyền dữ liệu giữa vi điều khiển và máy tính.
+
+### Quá trình hoạt động của các chân tín hiệu khi truyền dữ liệu bằng UART:
+
+1. Chuẩn bị dữ liệu: 
+
+* Trước khi bắt đầu truyền dữ liệu, dữ liệu cần được chuẩn bị bởi thiết bị gửi (thường là một vi điều khiển hoặc trình điều khiển UART).
+
+2. Bắt đầu truyền dữ liệu:
+
+* Thiết bị gửi đặt tín hiệu TX (chân truyền) ở mức logic cao.
+* Tín hiệu TX cao này là một tín hiệu đồng bộ để bắt đầu truyền dữ liệu.
+* Đồng thời, tín hiệu RX (chân nhận) của thiết bị nhận được đặt ở mức logic cao.
+
+3. Truyền dữ liệu bit theo thứ tự:
+
+* Dữ liệu được truyền bit theo thứ tự, bắt đầu từ bit thấp nhất đến bit cao nhất (hoặc ngược lại).
+* Mỗi bit dữ liệu được chuyển đổi thành một tín hiệu điện áp (thường là mức logic cao hoặc thấp) trên chân truyền TX.
+* Tín hiệu điện áp này thường thay đổi tại các khoảng thời gian được xác định trước, phụ thuộc vào tốc độ baud được cấu hình.
+
+4. Tín hiệu stop bit:
+
+* Sau khi truyền xong các bit dữ liệu, một hoặc nhiều bit stop được truyền. * Số bit stop và kiểu stop bit được cấu hình trước.
+* Tín hiệu stop bit thường là mức logic cao trên chân truyền TX.
+
+5. Kết thúc truyền dữ liệu:
+
+* Sau khi truyền dữ liệu và stop bit, chân truyền TX sẽ quay về mức logic cao, chờ sẵn sàng để truyền dữ liệu tiếp theo (nếu có).
+
+6. Nhận dữ liệu (đối với thiết bị nhận):
+
+* Thiết bị nhận sẽ theo dõi chân nhận RX để nhận dữ liệu.
+* Dữ liệu được đọc từ chân nhận RX theo các khoảng thời gian đã được xác định.
+
+Quá trình này tiếp tục lặp lại cho mỗi lần truyền dữ liệu mới, và các thiết bị truyền và nhận cần phải được cấu hình đồng bộ với nhau để đảm bảo truyền nhận dữ liệu chính xác.
+
