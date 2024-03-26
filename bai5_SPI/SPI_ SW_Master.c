@@ -1,4 +1,4 @@
-	#include<stm32f10x.h>
+#include<stm32f10x.h>
 #include<stm32f10x_gpio.h>
 #include<stm32f10x_rcc.h>
 
@@ -6,9 +6,9 @@
 #define SPI_SCK_Pin 	GPIO_Pin_0
 #define SPI_MISO_Pin 	GPIO_Pin_1
 #define SPI_MOSI_Pin 	GPIO_Pin_2
-#define SPI_CS_Pin 		GPIO_Pin_3
-#define SPI_GPIO 			GPIOA
-#define SPI_RCC 			RCC_APB2Periph_GPIOA
+#define SPI_CS_Pin 	GPIO_Pin_3
+#define SPI_GPIO 	GPIOA
+#define SPI_RCC 	RCC_APB2Periph_GPIOA
 
 // cap xung RCC
 void RCC_Config(){
