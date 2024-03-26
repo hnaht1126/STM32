@@ -327,17 +327,37 @@ SPI – Serial Peripheral Interface: Là chuẩn `giao tiếp nối tiếp đồ
 
 Hoạt động ở chế độ `song công` (Có thể truyền - nhận cùng thời điểm).
 
-Sử dụng 4 dây giao tiếp.
+SPI thường được sử dụng giao tiếp với bộ nhớ EEPROM, RTC (Đồng hồ thời gian thực), IC âm thanh, các loại cảm biến như nhiệt độ và áp suất, thẻ nhớ như MMC hoặc thẻ SD hoặc thậm chí các bộ vi điều khiển khác.
 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/1797aaad-8af1-4703-9cd9-b7c64ea1fb10)
 
-* SCK (Serial Clock): Thiết bị Master tạo xung tín hiệu SCK và cung cấp cho Slave.
+## Hoạt động của SPI 
+### Cấu tạo
+
+* SCK (Serial Clock): Thiết bị Master tạo xung tín hiệu SCK và cung cấp cho Slave. Xung này có chức năng giữ nhịp cho giao tiếp SPI. Mỗi nhịp trên chân SCK báo 1 bit dữ liệu đến hoặc đi → Quá trình ít bị lỗi và tốc độ truyền cao.
 * MISO (Master Input Slave Output): Tín hiệu tạo bởi thiết bị Slave và nhận bởi thiết bị Master.
 * MOSI (Master Output Slave Input): Tín hiệu tạo bởi thiết bị Master và nhận bởi thiết bị Slave. 
-* SS (Slave Select): Chọn thiết bị Slave cụ thể để giao tiếp. Để chọn Slave giao tiếp thiết bị Master chủ động kéo đường SS tương ứng xuống mức 0 (Low). 
+* SS (Slave Select): Chọn thiết bị Slave cụ thể để giao tiếp. Để chọn Slave giao tiếp thiết bị Master chủ động kéo đường SS tương ứng xuống mức 0 (Low). Chân SS của vi điều khiển (Master) có thể được người dùng tạo bằng cách cấu hình 1 chân GPIO bất kỳ chế độ Output.
+
+###  Khung truyền SPI: 
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/1f36941b-6f69-449e-a948-4d2bf91d86e9)
+
+* Mỗi chip Master hay Slave đều có một thanh ghi dữ liệu 8 bits.
+
+* Quá trình truyền nhận giữa Master và Slave xảy ra đồng thời sau 8 chu kỳ đồng hồ, một byte dữ liệu được truyền theo cả 2 hướng 
+
+* Quá trình trao đổi dữ liệu bắt đầu khi Master tạo 1 xung clock từ bộ tạo xung nhịp (Clock Generator) và kéo đường SS của Slave mà nó truyền dữ liệu xuống mức Low.
+
+* Cứ 1 xung clock, Master sẽ gửi đi 1 bit từ thanh ghi dịch (Shift Register) của nó đến thanh ghi dịch của Slave thông qua đường MOSI. Đồng thời Slave cũng gửi lại 1 bit đến cho Master qua đường MISO.Như vậy sau 8 chu kỳ clock thì hoàn tất việc truyền và nhận 1 byte dữ liệu.
+
+* Dữ liệu của 2 thanh ghi được trao đổi với nhau nên tốc độ trao đổi diễn ra nhanh và hiệu quả.
 
 
-## Quá trình truyền nhận SPI
+**Lưu ý**: Trong giao tiếp SPI, chỉ có thể có 1 Master nhưng có thể 1 hoặc nhiều Slave cùng lúc. Ở trạng thái nghỉ, chân SS của các Slave ở mức 1, muốn giao tiếp với Slave nào thì ta chỉ việc kéo chân SS của Slave đó xuống mức 0.
+
+
+### Quá trình truyền nhận SPI
 
 1. **Khởi tạo:** Khởi tạo giao tiếp SPI trên các thiết bị tham gia. Bao gồm cấu hình các thông số như tốc độ truyền, chế độ truyền dữ liệu (full duplex, half duplex), và cài đặt các chân (pins) tương ứng.
 
@@ -362,11 +382,24 @@ Quá trình truyền nhận SPI là một quy trình đồng bộ và nhanh chó
 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/b563076e-83ae-4bf7-b6c1-81dfe5c1e55f)
 
-## Các chế độ hoạt động của SPI
+### Các chế độ hoạt động của SPI
 
 SPI có 4 chế độ hoạt động phụ thuộc Clock Polarity – CPOL và  Phase - CPHA.
 
+* CPOL dùng để chỉ trạng thái của chân SCK ở trạng thái nghỉ. Chân SCK giữ ở mức cao khi CPOL=1 hoặc mức thấp khi CPOL=0.
+* CPHA dùng để chỉ các mà dữ liệu được lấy mẫu theo xung. Dữ liệu sẽ được lấy ở cạnh lên của SCK khi CPHA=0 hoặc cạnh xuống khi CPHA=1.
+
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/22139d22-c28a-4731-bcf5-a60c30e5998e)
+
+* Mode 0 (mặc định) – xung nhịp của đồng hồ ở mức thấp (CPOL = 0) và dữ liệu được lấy mẫu khi chuyển từ thấp sang cao (cạnh lên) (CPHA = 0).
+
+* Mode 1 - xung nhịp của đồng hồ ở mức thấp (CPOL = 0) và dữ liệu được lấy mẫu khi chuyển từ cao sang thấp (cạnh xuống) (CPHA = 1).
+
+* Mode 2 - xung nhịp của đồng hồ ở mức cao (CPOL = 1) và dữ liệu được lấy mẫu khi chuyển từ cao sang thấp (cạnh lên) (CPHA = 0).
+
+* Mode 3 - xung nhịp của đồng hồ ở mức cao (CPOL = 1) và dữ liệu được lấy mẫu khi chuyển từ thấp sang cao (cạnh xuống) (CPHA = 1).
+
+**Lưu ý**: Khi giao tiếp SPI giữa vi điều khiển và các thiết bị ngoại vi khác như IC, cảm biến thì 2 bên bắt buộc hoạt động cùng Mode, nếu không dữ liệu truyền nhận có thể bị đọc sai.
 
 
 ## 3. I2C
@@ -374,27 +407,58 @@ I2C là chuẩn giao tiếp nối tiếp, chỉ sử dụng 2 dây SDA, SCL.
 * Một Master giao tiếp được với nhiều Slave.
 * Truyền bán song công.
 
+Các bit dữ liệu sẽ được truyền từng bit một theo các khoảng thời gian đều đặn được thiết lập bởi 1 tín hiệu đồng hồ. 
+
+Bus I2C thường được sử dụng để giao tiếp ngoại vi cho rất nhiều loại IC khác nhau như các loại vi điều khiển, cảm biến, EEPROM, … .
+
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/34189775-9e85-4e5b-bac3-3f997fc3790e)
 
-## Quá trình truyền nhận I2C
+## Hoạt động của giao tiếp I2C
+### Cấu tạo :
 
+I2C sử dụng 2 đường truyền tín hiệu:
+* SCL -  Serial Clock Line : Tạo xung nhịp đồng hồ do Master phát đi
+* SDA - Serial Data Line : Đường truyền nhận dữ liệu.
+  ![image](https://github.com/hnaht1126/STM32/assets/152061415/6ce4db43-d2fd-4be6-8777-823e3149d848)
+
+* Giao tiếp I2C bao gồm quá trình truyền nhận dữ liệu giữa các thiết bị chủ tớ, hay Master - Slave.  
+* Thiết bị Master là 1 vi điều khiển, nó có nhiệm vụ điều khiển đường tín hiệu SCL và gửi nhận dữ liệu hay lệnh thông qua đường SDA đến các thiết bị khác.
+* Các thiết bị nhận các dữ liệu lệnh và tín hiệu từ thiết bị Master được gọi là các thiết bị Slave. Các thiết bị Slave thường là các IC, hoặc thậm chí là vi điều khiển. 
+* Master và Slave được kết nối với nhau như hình trên. Hai đường bus SCL và SDA đều hoạt động ở chế độ Open Drain, nghĩa là bất cứ thiết bị nào kết nối với mạng I2C này cũng chỉ có thể kéo 2 đường bus này xuống mức thấp (LOW), nhưng lại không thể kéo được lên mức cao. Vì để tránh trường hợp bus vừa bị 1 thiết bị kéo lên mức cao vừa bị 1 thiết bị khác kéo xuống mức thấp gây hiện tượng ngắn mạch. Do đó cần có 1 điện trờ ( từ 1 – 4,7 kΩ) để giữ mặc định ở mức cao.
+
+### Khung truyền I2C : 
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/18de2929-014e-4440-baec-940565a32212)
+
+* Khối bit địa chỉ :
+  
+Thông thường quá trình truyền nhận sẽ diễn ra với rất nhiều thiết bị, IC với nhau. Do đó để phân biệt các thiết bị này, chúng sẽ được gắn 1 địa chỉ vật lý 7 bit cố định.
+
+* Bit Read/Write:
+  
+Bit này dùng để xác định quá trình là truyền hay nhận dữ liệu từ thiết bị Master. Nếu Master gửi dữ liệu đi thì ứng với bit này bằng ‘0’, và ngược lại, nhận dữ liệu khi bit này bằng ‘1’.
+
+* Bit ACK/NACK: 
+
+Viết tắt của Acknowledged / Not Acknowledged. Dùng để so sánh bit địa chỉ vật lý của thiết bị so với địa chỉ được gửi tới. Nếu trùng thì Slave sẽ được đặt bằng ‘0’ và ngược lại, nếu không thì mặc định bằng ‘1’.
+
+* Khối bit dữ liệu: 
+
+Gồm 8 bit và được thiết lập bởi thiết bị gửi truyền đến thiết bị nhân. Sau khi các bit này được gửi đi, lập tức 1 bit ACK/NACK được gửi ngay theo sau để xác nhận rằng thiết bị nhận đã nhận được dữ liệu thành công hay chưa. Nếu nhận thành công thì bit ACK/NACK được set bằng ‘0’ và ngược lại.
+
+### Quá trình truyền nhận dữ liệu: 
 ![image](https://github.com/hnaht1126/STM32/assets/152061415/ba566af9-890b-42fe-a619-595675c32b17)
 
-1. **Khởi tạo**: Quá trình truyền nhận bắt đầu bằng việc `khởi tạo giao tiếp I2C trên các thiết bị tham gia`. Điều này bao gồm việc `cấu hình các thông số như tốc độ truyền, địa chỉ của thiết bị, và cài đặt các chân (pins) tương ứng`.
+* Bắt đầu: Thiết bị Master sẽ gửi đi 1 xung Start bằng cách kéo lần lượt các đường SDA, SCL từ mức 1 xuống 0.
+* Tiếp theo đó, Master gửi đi 7 bit địa chỉ tới Slave muốn giao tiếp cùng với bit Read/Write.
+* Slave sẽ so sánh địa chỉ vật lý với địa chỉ vừa được gửi tới. Nếu trùng khớp, Slave sẽ xác nhận bằng cách kéo đường SDA xuống 0 và set bit ACK/NACK bằng ‘0’. Nếu không trùng khớp thì SDA và bit ACK/NACK đều mặc định bằng ‘1’.
+* Thiết bị Master sẽ gửi hoặc nhận khung bit dữ liệu. Nếu Master gửi đến Slave thì bit Read/Write ở mức 0. Ngược lại nếu nhận thì bit này ở mức 1.
+* Nếu như khung dữ liệu đã được truyền đi thành công, bit ACK/NACK được set thành mức 0 để báo hiệu cho Master tiếp tục.
+* Sau khi tất cả dữ liệu đã được gửi đến Slave thành công, Master sẽ phát 1 tín hiệu Stop để báo cho các Slave biết quá trình truyền đã kết thúc bằng các chuyển lần lượt SCL, SDA từ mức 0 lên mức 1.
 
-2. **Chọn thiết bị**: Trong một hệ thống có nhiều thiết bị I2C, `thiết bị gửi dữ liệu sẽ gửi một tín hiệu gọi là "Start condition" để bắt đầu quá trình truyền dữ liệu và chọn thiết bị nhận dữ liệu`.
-
-3. **Gửi địa chỉ thiết bị và hướng truyền**: Thiết bị gửi sẽ gửi `địa chỉ của thiết bị nhận dữ liệu cùng với bit chỉ định hướng truyền (ghi hoặc đọc)`.
-
-4. **Truyền hoặc nhận dữ liệu**: Sau khi thiết bị nhận dữ liệu xác nhận địa chỉ, quá trình truyền hoặc nhận dữ liệu bắt đầu. `Dữ liệu được truyền hoặc nhận thông qua các chân dữ liệu (SDA - Serial Data)`.
-
-5. **Xác nhận dữ liệu**: * Thiết bị nhận* có thể `xác nhận việc nhận dữ liệu bằng cách gửi một tín hiệu ACK hoặc NACK sau mỗi byte dữ liệu`.
-
-6. **Kết thúc quá trình truyền nhận**: Quá trình truyền nhận có thể kết thúc bằng cách `gửi một tín hiệu "Stop condition"` từ * thiết bị gửi*.
-
-Quá trình truyền nhận I2C là một quy trình đồng bộ và linh hoạt, thích hợp cho các ứng dụng yêu cầu truyền dữ liệu giữa các thành phần trong hệ thống điện tử mà không cần nhiều chân giao tiếp.
-
-
+### Các chế độ hoạt động của I2C: 
+* Chế độ chuẩn (standard mode) với tốc độ 100 kBit/s.
+* Chế độ tốc độ thấp (low speed mode) với tốc độ 10 kBit/s.
 
 ## 4. UART
 
