@@ -676,3 +676,87 @@ EOC: End Of Conversion - Kết thúc quá trình chuyển đổi. Đây là mộ
 DMA: Direct Memory Access - Truy cập bộ nhớ trực tiếp. DMA cho phép truyền dữ liệu giữa bộ nhớ và các thiết bị ngoại vi mà không cần sự can thiệp của CPU.
 
 DR: Data Register - Thanh ghi dữ liệu. Trong ngữ cảnh của ADC, DR là nơi mà kết quả chuyển đổi analog-to-digital được lưu trữ.
+
+# Bài 10 DMA
+## 1. Truy cập bộ nhớ trực tiếp (DMA)
+bộ điều khiển DMA có thể thực hiện truyền dữ liệu bộ nhớ sang bộ nhớ cũng như truyền dữ liệu ngoại vi sang bộ nhớ hoặc ngược lại.
+
+    DMA có thể điều khiển data truyền từ :
+    Bộ nhớ đến Peripheral 
+    Ngược lại, Periph đến Bộ nhớ.
+    Giữa 2 vùng nhớ.
+    Không thông qua data bus  của CPU. 
+    -> Giữ cho tài nguyên của CPU được rảnh rỗi cho các thao tác khác. Đồng thời tránh việc data nhận về từ ngoại vi bị mất mát.
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/0ca4d2cc-1162-4f2e-abf6-5c2cf1d47ede)
+
+Các đơn vị DMA trong STM32F103 có các tính năng sau:
+- 12 kênh (yêu cầu) có thể cấu hình độc lập: 7 cho DMA1 và 5 cho DMA2
+- Các Channel đều có thể được cấu hình riêng biệt.
+- Mỗi Channel được kết nối để dành riêng cho tín hiệu DMA từ các thiết bị ngoại vi hoặc tín hiệu từ bên trong MCU.
+- Có 4 mức ưu tiên có thể lập trình cho mỗi Channel.
+- Kích thước data được sử dụng là 1 Byte, 2 Byte (Half Word) hoặc 4byte (Word). Địa chỉ nguồn/đích phải được căn chỉnh theo kích thước dữ liệu.
+- Hỗ trợ việc lặp lại liên tục Data.
+- 5 cờ báo ngắt (DMA Half Transfer, DMA Transfer complete, DMA Transfer Error, DMA FIFO Error, Direct Mode Error).
+- Quyền truy cập tới Flash, SRAM, APB1, APB2, APB.
+- Số lượng data có thể lập trình được lên tới 65535.
+- Đối với DMA2, mỗi luồng đều hỗ trợ để chuyển dữ liệu từ bộ nhớ đến bộ nhớ.
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/dfd6ae74-6879-4487-bb56-6d4a82930345)
+
+## 2. Chế độ hoạt động 
+DMA có 2 chế độ hoạt động là normal và circular:
+-  Normal mode: Với chế độ này, DMA truyền dữ liệu cho tới khi truyền đủ 1 lượng dữ liệu giới hạn đã khai báo DMA sẽ dừng hoạt động. Muốn nó tiếp tục hoạt động thì phải khởi động lại
+ 
+- Circular mode: Với chế độ này, Khi DMA truyền đủ 1 lượng dữ liệu giới hạn đã khai báo thì nó sẽ truyền tiếp về vị trí ban đầu (Cơ chế như Ring buffer).
+
+## 3. Cấu hình STM32 DMA
+cấp xung từ AHB:
+cả 2 bộ DMA đều có xung cấp từ AHB. Ngoài ra cần cấp xung cho AFIO.
+
+```c
+void RCC_Config(){
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA| RCC_APB2Periph_SPI1| RCC_APB2Periph_AFIO, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+}
+
+```
+Các tham số cho bộ DMA được cấu hình trong struct DMA_InitTypeDef. Gồm:
+
+    - DMA_Mode: Cấu hình mode hoạt động.
+    - DMA_DIR: Cấu hình hướng truyền DMA, từ ngoại vi tới vùng nhớ hay từ vùng nhớ tới ngoại vi.
+    - DMA_M2M: Cấu hình sử dụng truyền từ bộ nhớ đếm bộ nhớ cho kênh DMA.
+    - DMA_BufferSize: Cấu hình kích cỡ buffer. Số lượng dữ liệu muốn gửi/nhận qua DMA.
+    - DMA_MemoryBaseAddr: Cấu hình địa chỉ vùng nhớ cần ghi/ đọc data .
+    - DMA_MemoryDataSize: Cấu hình độ lớn data của bộ nhớ.
+    - DMA_MemoryInc: Cấu hình địa chỉ bộ nhớ có tăng lên sau khi truyền DMA hay không.
+    - DMA_PeripheralBaseAddr: Cấu hình địa chỉ của ngoại vi cho DMA. Đây là địa chỉ mà DMA sẽ lấy data hoặc truyền data tới cho ngoại vi.
+    - DMA_PeripheralDataSize: Cấu hình độ lớn data của ngoại vi.
+    - DMA_PeripheralInc: Cấu hình địa chỉ ngoại vi có tăng sau khi truyền - DMA hay không.
+    - DMA_Priority: Cấu hình độ ưu tiên cho kênh DMA.
+
+```c
+    DMA_InitStruct.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
+    DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
+    DMA_InitStruct.DMA_BufferSize = 35;
+    DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)buffer;
+    DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&SPI1->DR;
+    DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStruct.DMA_Priority = DMA_Priority_Medium;
+```
+
+Sau khi cấu hình cho DMA xong, chỉ cần gọi hàm DMACmd cho ngoại vi tương ứng. Bộ DMA sẽ tự động truyền nhận data cũng như ghi dữ liệu vào vùng nhớ cụ thể. 
+
+```c
+    DMA_Init(DMA1_Channel2, &DMA_InitStruct);
+    DMA_Cmd(DMA1_Channel2, ENABLE);
+    SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Rx, ENABLE);
+/* Channel2: Ứng với ngoại vi SPI1, RX nhận.
+EX: Hàm SPI_I2S_DMACmd(); cho phép truyền nhận DMA của bộ SPI.
+ */
+```
