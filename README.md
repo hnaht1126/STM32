@@ -532,3 +532,147 @@ Giao diện UART thường được sử dụng trong các ứng dụng như tru
 
 Quá trình này tiếp tục lặp lại cho mỗi lần truyền dữ liệu mới, và các thiết bị truyền và nhận cần phải được cấu hình đồng bộ với nhau để đảm bảo truyền nhận dữ liệu chính xác.
 
+# Bài 9 ADC
+
+## 1. ADC 
+ADC Analog to Digital Convert là bộ chuyển đổi tương tự sang số. Điện áp Vin được so sánh với điện áp mẫu Vref (giá trị lớn nhât), sau đó được chuyển đổi thành số 
+
+2 tham số quan trọng của bộ ADC 
+- Tốc độ lấy mẫu (sampling) được tính theo số chu kỳ chuyển đổi. 
+(
+    Tần số lấy mẫu càng lớn thì tín hiệu sau khi chuyển đổi sẽ có độ chính xác càng cao. Khả năng tái tạo lại tín hiệu càng chính xác.
+
+    Tần số lấy mẫu =1/(thời gian lấy mẫu+ Tg chuyển đổi.)
+    
+)
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/6333eab6-523f-4945-b1b4-f43f25839080)
+
+Tần số lấy mẫu phải lớn hơn tần số của tín hiệu ít nhất 2 lần để đảm bảo độ chính xác khi khôi phục lại tín hiệu.
+
+
+- Độ phân giải: Số bit bộ ADC sử dụng để mã hóa tín hiệu.
+(bộ ADC có độ phân giải 10 Bit sẽ có 2^10 = 1024 giá trị)
+
+![image](https://github.com/hnaht1126/STM32/assets/152061415/2ee319c4-7b34-478e-ba7c-9efc95c4ef37)
+
+ADC có độ phân giải càng cao thì cho ra kết quả chuyển đổi càng chi tiết. 
+
+## 2. ADC trong STM32
+
+STM32F103C8 có 2 kênh ADC đó là ADC1 và ADC2, mỗi kênh có tối đa là 9 channel 
+
+Kết quả chuyển đổi được lưu trữ trong thanh ghi 16 bit. 
+
+ - Độ phân giải 12 bit. (2^12= 4096 - điện áp 0 → 3.3V sẽ thành 0 → 4095 khoảng giá trị)
+
+ - Có các ngắt hỗ trợ. (ngắt tại các sự kiện End of convert, End of Injected, Analog Watchdog)
+
+ - Có thể điều khiển hoạt động ADC bằng xung Trigger. (Xung Trigger là một tín hiệu đặc biệt được sử dụng để bắt đầu hoặc kích hoạt một quá trình hoạt động)
+ 
+ - Thời gian chuyển đổi nhanh : 1us tại tần số 65Mhz.
+ 
+ - Có bộ DMA (Direct Memory Access - truyền dữ liệu giữa các thiết bị ngoại vi và bộ nhớ không cần thông qua trung gian của CPU ) giúp tăng tốc độ xử lí.
+ 
+## 3. Cấu hình ADC
+
+Cấp xung ADC: 
+Các bộ ADC được cấp xung từ RCC APB2, để bộ ADC hoạt động cần cấp xung cho cả ADC để tạo tần số lấy mẫu tín hiệu và cấp xung cho GPIO của Port ngõ vào.
+
+  ```c
+// cấp xung cho ADC1 
+void RCC_Config(){
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA| RCC_APB2Periph_ADC1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+}
+
+  ```
+Cấu hình GPIO:
+ADC hỗ trợ rất nhiều kênh, mỗi kênh lấy tín hiệu từ các chân GPIO của các Port và từ các chân khác. Các chân GPIO dùng làm ngõ vào cho ADC sẽ được cấu hình Mode AIN.(Analogue Input).
+
+```c
+void GPIO_Config(){
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN; // chân GPIO sử dụng làm đầu vào analog
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+```
+Các tham số cấu hình cho bộ ADC được tổ chức trong Struct ADC_InitTypeDef, Gồm:
+
+    - ADC_Mode:  Cấu hình chế độ hoạt động cho ADC là đơn kênh(Independent) hay đa kênh, ngoài ra còn có các chế độ ADC chuyển đổi tuần tự các kênh (regularly) hay chuyển đổi khi có kích hoạt từ phần 
+    mềm hay các tín hiệu khác (injected).
+    
+    - ADC_NbrOfChannel: Số kênh ADC để cấu hình
+    
+    - ADC_ContinuousConvMode: Cấu hình bộ ADC có chuyển đổi liên tục hay không, Enable để cấu hình ADC  chuyển đổi lien tục, nếu cấu hình Disable, ta phải gọi lại lệnh đọc ADC để bắt đầu quá trình chuyển 
+    đổi. 
+    
+    - ADC_ExternalTrigConv: Enable để sử dụng tín hiệu trigger để kích 
+    hoạt ADC, Disable nếu không sử dụng.
+    
+    - ADC_ScanConvMode: Cấu hình chế độ quét ADC lần lượt từng kênh. 
+    Enable nếu sử dụng chế độ quét này.
+    
+    - ADC_DataAlign: Cấu hình căn lề cho data. Vì bộ ADC xuất ra giá trị 12bit, được lưu vào biến 16 hoặc 32 bit nên phải căn lề các bit về trái hoặc phải.
+
+Các hàm thông dụng:
+
+Ngoài các tham số trên, cần cấu hình thêm thời gian lấy mẫu, thứ tự kênh ADC khi quét,
+
+    ADC_RegularChannelConfig(ADC_TypeDef* ADCx, uint8_t ADC_Channel, uint8_t Rank, uint8_t ADC_SampleTime):
+
+- Rank: Thứ tự của kênh ADC.
+- SampleTime: Thời gian lấy mẫu tín hiệu.
+- ADC_SoftwareStartConvCmd(ADC_TypeDef* ADCx, FunctionalState NewState): Bắt đầu quá trình chuyển đổi.
+- ADC_GetConversionValue(ADC_TypeDef* ADCx): Đọc giá trị chuyển đổi được ở các kênh ADC tuần tự.
+- ADC_GetDualModeConversionValue(void): Trả về giá trị chuyển đổi cuối cùng của ADC1, ADC2 ở chế độ kép.
+
+Cấu hình ADC:
+```c
+void ADC_Config(){
+    ADC_InitTypeDef ADC_InitStruct;
+    
+    ADC_InitStruct.ADC_Mode = ADC_Mode_Independent; // mode ADC hoạt động độc lập 
+    ADC_InitStruct.ADC_NbrOfChannel = 1; // số kênh ADC sử dụng
+    ADC_InitStruct.ADC_ScanConvMode = DISABLE; //vô hiệu chế độ quét - chế độ đơn 
+    ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None; //không sử dụng tính hiệu ngoại vi kích hoạt chuyển đổi ADC
+    ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;  // chế độ chuyển đổi liên tục 
+    ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right; // căn chỉnh dữ liệu về bên phải 
+    
+    ADC_Init(ADC1, &ADC_InitStruct); // cấu hình ADC1 với các thiết lập
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_55Cycles5);  //đọc dữ liệu  kênh ADC 0, thời gian lấy mẫu 55.5 chu kỳ 
+    ADC_Cmd(ADC1, ENABLE); // kích hoạt ADC1 
+    ADC_SoftwareStartConvCmd(ADC1, ENABLE);  // ADC được khởi động bằng phần mềm
+}
+
+```
+
+## ACD một kênh chế độ Single và Continuous
+
+Với chế độ Single bộ ADC chỉ chuyển đổi 1 lần rồi dừng, một sự kiện ngắt được sinh ra nếu bit EOCIR được set lên 1
+
+Với chế độ Continuous bộ ADC sẽ chuyển đổi liên tục, một sự kiện ngắt được sinh ra nếu bit EOCIR được set lên 1
+
+DMA sẽ sinh ra nếu bit DMA dc set lên 1(DMA chỉ có trên ADC1 và ADC3)
+
+Kết quả convert được lưu vào thanh ghi DR
+
+Bắt đầu convert bằng cách set bit ADON lên 1
+
+Cơ chế để tạo ADC như sau:
+
+1. Enable bộ clock cho ADC, ghi hệ số chia cho ADC prescaler
+2. Chọn các kênh cần chuyển đổi
+3. Chọn chế độ chuyển đổi Sinlge, Continuous, Scan, Discontinuous
+4. Chọn thời gian lấy mẫu (Sampling Time)
+5. Chọn Ngắt hoặc DMA
+6. Start bộ chuyển đổi
+7. Kiểm tra cờ EOC hoặc trong ngắt đọc dữ liệu từ thanh ghi DR về
+
+EOC: End Of Conversion - Kết thúc quá trình chuyển đổi. Đây là một cờ (flag) hoặc bit được set khi quá trình chuyển đổi hoàn thành.
+
+DMA: Direct Memory Access - Truy cập bộ nhớ trực tiếp. DMA cho phép truyền dữ liệu giữa bộ nhớ và các thiết bị ngoại vi mà không cần sự can thiệp của CPU.
+
+DR: Data Register - Thanh ghi dữ liệu. Trong ngữ cảnh của ADC, DR là nơi mà kết quả chuyển đổi analog-to-digital được lưu trữ.
