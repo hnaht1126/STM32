@@ -419,6 +419,7 @@ Bus I2C thường được sử dụng để giao tiếp ngoại vi cho rất nh
 I2C sử dụng 2 đường truyền tín hiệu:
 * SCL -  Serial Clock Line : Tạo xung nhịp đồng hồ do Master phát đi
 * SDA - Serial Data Line : Đường truyền nhận dữ liệu.
+  
   ![image](https://github.com/hnaht1126/STM32/assets/152061415/6ce4db43-d2fd-4be6-8777-823e3149d848)
 
 * Giao tiếp I2C bao gồm quá trình truyền nhận dữ liệu giữa các thiết bị chủ tớ, hay Master - Slave.  
